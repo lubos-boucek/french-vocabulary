@@ -34,6 +34,10 @@ class ParseEngine(Dependent):
 	def parseEntity(self, entity):
 		""" Parses entity """
 
+		# entity["description"] = article.h3.a.get_text().strip()
+		# self.processPartialUrl(article.a.get("href"), entity)
+
+		# if not response:
 		url = LAROUSSE_URL + entity["query"] + "/" + entity["id"]
 		response = self.props["page_retriever"].retrieve(url)
 		
@@ -82,7 +86,14 @@ class ParseEngine(Dependent):
 		# TODO? Simplify?
 		self.result["entities"] = \
 			[entity for i, entity in enumerate(self.result["entities"]) \
-			if i == [x["id"] for x in
+			if i == [x["id"] for x in self.result["entities"]].index(entity["id"])]
+		
+		# for article in articles:
+		# 	try:
+		# 		article.get("class").index("sel")
+		# 		sel = True
+		# 	except (AttributeError, ValueError) as error:
+		# 		sel = False
 
 		for entity in self.result["entities"]:
 			self.parseEntity(entity)
