@@ -12,5 +12,5 @@ class Dependent:
 				self.props[req] = injection[req]
 			except KeyError:
 				# TODO: &>2, logging
-				print("# Requirement " + req + " not props or None")
+				print("# Requirement " + req + " not injected, or None")
 				raise

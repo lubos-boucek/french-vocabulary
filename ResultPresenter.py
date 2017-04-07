@@ -9,15 +9,9 @@ class ResultPresenter(Dependent):
 	def define(self, word):
 		self.result = self.props["parse_engine"].parse(word)
 
-		# TODO: TEMP
-		# print(self.result)
-
-		# print([x["id"] + " " + x["query"] for x in self.result["entities"]])
-		# return
-
 		if not len(self.result["entities"]):
 			# >&2, logging
-			print("No result has been returned for " + word + "!")
+			print("# No result has been returned for " + word + "!")
 			return
 
 		for entity in self.result["entities"]:

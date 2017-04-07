@@ -31,17 +31,11 @@ class ParseEngine(Dependent):
 		entity["query"] = m.group(1)
 		entity["id"] = m.group(2)
 
-	def parseEntity(self, article, response=None):
-		""" Parses <article> element referencing an entity """
+	def parseEntity(self, entity):
+		""" Parses entity """
 
-		entity = {}
-		
-		entity["description"] = article.h3.a.get_text().strip()
-		self.processPartialUrl(article.a.get("href"), entity)
-
-		if not response:
-			url = LAROUSSE_URL + entity["query"] + "/" + entity["id"]
-			response = self.props["page_retriever"].retrieve(url)
+		url = LAROUSSE_URL + entity["query"] + "/" + entity["id"]
+		response = self.props["page_retriever"].retrieve(url)
 		
 		soup = bs(response["text"], "html.parser")
 
@@ -57,6 +51,10 @@ class ParseEngine(Dependent):
 			normalized = unicodedata.normalize("NFKD", li.get_text())
 			entity["definitions"].append(normalized)
 
+	def parseArticle(self, article):
+		entity = {}
+		self.processPartialUrl(article.a.get("href"), entity)
+		entity["description"] = article.h3.a.get_text().strip()
 		self.result["entities"].append(entity)
 
 	def parse(self, word):
@@ -72,22 +70,21 @@ class ParseEngine(Dependent):
 		div = soup.find("div", { "class": "wrapper-search" })
 		
 		# TODO? throw?
+		# No results
 		if not div:
 			return self.result
 
 		articles = div.find_all("article")
-		
-		# First parse URL, then filter out duplicated and irrelevant articles
 		for article in articles:
-			try:
-				article.get("class").index("sel")
-				sel = True
-			except (AttributeError, ValueError) as error:
-				sel = False
+			self.parseArticle(article)
 
-			# Reusing response for current entity
-			self.parseEntity(article, response if sel else None)
+		# Filter out duplicates
+		# TODO? Simplify?
+		self.result["entities"] = \
+			[entity for i, entity in enumerate(self.result["entities"]) \
+			if i == [x["id"] for x in
 
-		# # for article in div.article:
-		# 	# print(article)
+		for entity in self.result["entities"]:
+			self.parseEntity(entity)
+
 		return self.result
