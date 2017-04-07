@@ -1,5 +1,6 @@
 class Dependent:
 	""" Checks whether all requirements are present in injection """
+	
 	def __init__(self, injection, required):
 		self.props = {}
 		

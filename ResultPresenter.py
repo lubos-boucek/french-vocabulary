@@ -1,20 +1,29 @@
 from Dependent import Dependent
 
 class ResultPresenter(Dependent):
+	""" Manages presentation of parsed page """
+
 	def __init__(self, injection):
 		super().__init__(injection, ["parse_engine"])
 
 	def define(self, word):
 		self.result = self.props["parse_engine"].parse(word)
 
+		# TODO: TEMP
 		# print(self.result)
 
-		if not self.result["key"]:
+		# print([x["id"] + " " + x["query"] for x in self.result["entities"]])
+		# return
+
+		if not len(self.result["entities"]):
 			# >&2, logging
-			print("No result has been returned!")
+			print("No result has been returned for " + word + "!")
 			return
 
-		print(self.result["key"])
+		for entity in self.result["entities"]:
+			print(entity["description"], "(" + entity["heading"] + ")")
 
-		for definition in self.result["definitions"]:
-			print(":", definition)
+			for definition in entity["definitions"]:
+				print(":", definition)
+			
+			print()

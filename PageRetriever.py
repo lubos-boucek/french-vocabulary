@@ -6,6 +6,7 @@ import os, pathlib, requests, json, hashlib, urllib.request as urlreq
 # TODO: debug level
 class PageRetriever(Dependent):
 	""" Manages retrieving of web pages, and cache """
+	
 	def __init__(self, injection):
 		super().__init__(injection, ["retrieved_directory"])
 
@@ -34,7 +35,7 @@ class PageRetriever(Dependent):
 		path = self.props["retrieved_directory"] + digest
 
 		if os.path.isfile(path):
-			# print("# Reusing cached file ...")
+			print("# Reusing cached file ...")
 			return self.loadFromFile(path)
 
 		# TODO: try

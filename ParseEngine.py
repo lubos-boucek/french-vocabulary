@@ -1,45 +1,93 @@
 from Dependent import Dependent
 from bs4 import BeautifulSoup as bs
-import unicodedata
+import unicodedata, re
 
-LAROUSSE = "http://larousse.fr/dictionnaires/francais/"
+LAROUSSE_ROOT_URL = "http://larousse.fr/"
+LAROUSSE_FRENCH_URL = "dictionnaires/francais/"
+LAROUSSE_URL = LAROUSSE_ROOT_URL + LAROUSSE_FRENCH_URL
 
 class ParseEngine(Dependent):
 	""" Receives and parses response """
+
 	def __init__(self, injection):
 		super().__init__(injection, ["page_retriever"])
 
 		self.reset()
 
 	def reset(self):
-		self.result = { "definitions": [] }
+		self.result = { "entities": [] }
 
-	def parse(self, word):
-		self.reset()
-		self.result["searched"] = word
+	def processPartialUrl(self, url, entity):
+		""" Extracts entity query and id from URL """
 
-		url = LAROUSSE + word
-		response = self.props["page_retriever"].retrieve(url)
+		if url.startswith("/" + LAROUSSE_FRENCH_URL):
+			url = url[1 + len(LAROUSSE_FRENCH_URL):]
+		else:
+			# TODO? throw?
+			return
+
+		m = re.match("([^/]*)/([0-9]*)", url)
+
+		entity["query"] = m.group(1)
+		entity["id"] = m.group(2)
+
+	def parseEntity(self, article, response=None):
+		""" Parses <article> element referencing an entity """
+
+		entity = {}
+		
+		entity["description"] = article.h3.a.get_text().strip()
+		self.processPartialUrl(article.a.get("href"), entity)
+
+		if not response:
+			url = LAROUSSE_URL + entity["query"] + "/" + entity["id"]
+			response = self.props["page_retriever"].retrieve(url)
+		
 		soup = bs(response["text"], "html.parser")
 
-		# TODO: Get ID
-		# print("url: ", response["url"])
-
-		# Get actual displayed key
+		# Parse out heading
 		h2 = soup.find("h2", { "class": "AdresseDefinition" })
-		
-		# ... not found
-		if not h2:
-			self.result["key"] = None
-			return self.result
+		entity["heading"] = h2.get_text().strip()
 
-		self.result["key"] = h2.get_text().strip()
-
-		# Get definitions
+		# Parse out definitions
+		entity["definitions"] = []
 		lis = soup.find_all("li", { "class": "DivisionDefinition" })
 
 		for li in lis:
 			normalized = unicodedata.normalize("NFKD", li.get_text())
-			self.result["definitions"].append(normalized)
+			entity["definitions"].append(normalized)
 
+		self.result["entities"].append(entity)
+
+	def parse(self, word):
+		self.reset()
+
+		url = LAROUSSE_URL + word
+		self.result["searched"] = word
+
+		response = self.props["page_retriever"].retrieve(url)
+		soup = bs(response["text"], "html.parser")
+
+		# Get all entities
+		div = soup.find("div", { "class": "wrapper-search" })
+		
+		# TODO? throw?
+		if not div:
+			return self.result
+
+		articles = div.find_all("article")
+		
+		# First parse URL, then filter out duplicated and irrelevant articles
+		for article in articles:
+			try:
+				article.get("class").index("sel")
+				sel = True
+			except (AttributeError, ValueError) as error:
+				sel = False
+
+			# Reusing response for current entity
+			self.parseEntity(article, response if sel else None)
+
+		# # for article in div.article:
+		# 	# print(article)
 		return self.result
