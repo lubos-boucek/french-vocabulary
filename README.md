@@ -1,13 +1,8 @@
-# fr-scrapper
+# french-vocabulary
 
 ## About
 
-I've developed these scripts for quick command line look-ups of French words
-and their subsequent testing. I plan to extend
-it with support for multiple languages and parsers.
-
-hard-coded defaults (*) -> check --conf-file arg. -> load conf. file (*) ->
-	check rest of arg.
+Old code from 2017, to be reworked and finished.
 
 ## TODO
 * CLI options
@@ -26,5 +21,3 @@ hard-coded defaults (*) -> check --conf-file arg. -> load conf. file (*) ->
 * interactive mode
 * test mode
 * .conf
-
-bande : (Architecture)
