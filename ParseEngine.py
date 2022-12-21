@@ -56,16 +56,18 @@ class ParseEngine(Dependent):
 			entity["definitions"].append(normalized)
 
 	def parseArticle(self, article):
+		""" Parses <article> element """
+
 		entity = {}
 		self.processPartialUrl(article.a.get("href"), entity)
 		entity["description"] = article.h3.a.get_text().strip()
 		self.result["entities"].append(entity)
 
-	def parse(self, word):
+	def parse(self, query):
 		self.reset()
 
-		url = LAROUSSE_URL + word
-		self.result["searched"] = word
+		url = LAROUSSE_URL + query
+		self.result["searched"] = query
 
 		response = self.props["page_retriever"].retrieve(url)
 		soup = bs(response["text"], "html.parser")

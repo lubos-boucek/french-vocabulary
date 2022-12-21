@@ -38,6 +38,7 @@ class PageRetriever(Dependent):
 			print("# Reusing cached file ...")
 			return self.loadFromFile(path)
 
+		print("# Retrieving web page (" + url + ") ...")
 		# TODO: try
 		responseObject = requests.get(url)
 		response = { "url": responseObject.url, \
